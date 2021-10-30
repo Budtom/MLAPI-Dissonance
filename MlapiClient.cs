@@ -1,9 +1,7 @@
 ﻿using Dissonance.Networking;
-using MLAPI;
-using MLAPI.Messaging;
-using MLAPI.Serialization.Pooled;
-using MLAPI.Transports;
+using Unity.Netcode;
 using System;
+using Allocator = Unity.Collections.Allocator;
 
 public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
 {
@@ -17,15 +15,17 @@ public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
     public override void Connect()
     {
         // Register receiving packets on the client from the server
-        CustomMessagingManager.RegisterNamedMessageHandler("DissonanceToClient", (senderClientId, stream) =>
-        {
-            Int32 length = stream.Length > Int32.MaxValue ? Int32.MaxValue : Convert.ToInt32(stream.Length);
-            Byte[] buffer = new Byte[length];
-            stream.Read(buffer, 0, length);
-
-            base.NetworkReceivedPacket(new ArraySegment<byte>(buffer));
-        });
+        NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler("DissonanceToClient", OnDissonanceToClient);
         Connected();
+    }
+
+    protected void OnDissonanceToClient(ulong id, FastBufferReader reader)
+    {
+        int length = reader.Length;
+        Byte[] buffer = new Byte[length];
+        reader.ReadBytes(ref buffer, length);
+
+        base.NetworkReceivedPacket(new ArraySegment<byte>(buffer));
     }
 
     protected override void ReadMessages()
@@ -35,41 +35,41 @@ public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
 
     protected override void SendReliable(ArraySegment<byte> packet)
     {
-        if (NetworkManager.Singleton.IsHost)
+        if (NetworkManager.Singleton.IsServer)
         {
             // As we are the host in this scenario we should send the packet directly to the server rather than over the network and avoid loop-back issues
             _network.server.NetworkReceivedPacket(new MlapiConn(), packet);
         }
         else
         {
-            using (PooledNetworkBuffer writer = NetworkBufferPool.GetBuffer())
+            using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
             {
-                for (var i = 0; i < packet.Count; i++)
-                {
-                    writer.WriteByte(packet.Array[i + packet.Offset]);
-                }
-                CustomMessagingManager.SendNamedMessage("DissonanceToServer", NetworkManager.Singleton.ServerClientId, writer, NetworkChannel.AnimationUpdate);
+                writer.WriteBytes(packet.Array, packet.Count, packet.Offset);
+
+                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToServer",
+                        NetworkManager.Singleton.ServerClientId, writer, NetworkDelivery.Reliable);
             }
         }
     }
 
     protected override void SendUnreliable(ArraySegment<byte> packet)
     {
-        if (NetworkManager.Singleton.IsHost)
+        if (NetworkManager.Singleton.IsServer)
         {
             // As we are the host in this scenario we should send the packet directly to the server rather than over the network and avoid loopback issues
             _network.server.NetworkReceivedPacket(new MlapiConn(), packet);
         }
         else
         {
-
-            using (PooledNetworkBuffer writer = NetworkBufferPool.GetBuffer())
+            using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
             {
                 for (var i = 0; i < packet.Count; i++)
                 {
                     writer.WriteByte(packet.Array[i + packet.Offset]);
                 }
-                CustomMessagingManager.SendNamedMessage("DissonanceToServer", NetworkManager.Singleton.ServerClientId, writer, NetworkChannel.TimeSync);
+
+                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToServer", 
+                    NetworkManager.Singleton.ServerClientId, writer, NetworkDelivery.Unreliable);
             }
         }
 

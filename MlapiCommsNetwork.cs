@@ -1,7 +1,7 @@
 ﻿using Dissonance;
 using Dissonance.Networking;
 using JetBrains.Annotations;
-using MLAPI;
+using Unity.Netcode;
 
 public class MlapiCommsNetwork
   : BaseCommsNetwork<
