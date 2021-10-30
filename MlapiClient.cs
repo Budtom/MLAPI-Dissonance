@@ -44,6 +44,7 @@ public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
         {
             using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
             {
+                writer.TryBeginWrite(packet.Count);
                 writer.WriteBytes(packet.Array, packet.Count, packet.Offset);
 
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToServer",
@@ -63,10 +64,8 @@ public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
         {
             using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
             {
-                for (var i = 0; i < packet.Count; i++)
-                {
-                    writer.WriteByte(packet.Array[i + packet.Offset]);
-                }
+                writer.TryBeginWrite(packet.Count);
+                writer.WriteBytes(packet.Array, packet.Count, packet.Offset);
 
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToServer", 
                     NetworkManager.Singleton.ServerClientId, writer, NetworkDelivery.Unreliable);
