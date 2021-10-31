@@ -23,7 +23,7 @@ public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
     {
         int length = reader.Length;
         Byte[] buffer = new Byte[length];
-        reader.ReadBytes(ref buffer, length);
+        reader.ReadBytesSafe(ref buffer, length);
 
         base.NetworkReceivedPacket(new ArraySegment<byte>(buffer));
     }
@@ -44,8 +44,7 @@ public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
         {
             using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
             {
-                writer.TryBeginWrite(packet.Count);
-                writer.WriteBytes(packet.Array, packet.Count, packet.Offset);
+                writer.WriteBytesSafe(packet.Array, packet.Count, packet.Offset);
 
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToServer",
                         NetworkManager.Singleton.ServerClientId, writer, NetworkDelivery.Reliable);
@@ -64,8 +63,7 @@ public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
         {
             using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
             {
-                writer.TryBeginWrite(packet.Count);
-                writer.WriteBytes(packet.Array, packet.Count, packet.Offset);
+                writer.WriteBytesSafe(packet.Array, packet.Count, packet.Offset);
 
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToServer", 
                     NetworkManager.Singleton.ServerClientId, writer, NetworkDelivery.Unreliable);

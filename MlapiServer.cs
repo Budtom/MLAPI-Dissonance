@@ -26,7 +26,7 @@ public class MlapiServer : BaseServer<MlapiServer, MlapiClient, MlapiConn>
         //Would skip the allocation below.
         //Alternativly, we could just preallocate a big buffer and reuse it for each message?
         Byte[] buffer = new Byte[reader.Length];
-        reader.ReadBytes(ref buffer, reader.Length);
+        reader.ReadBytesSafe(ref buffer, reader.Length);
 
         base.NetworkReceivedPacket(client, new ArraySegment<byte>(buffer));
     }
@@ -52,8 +52,7 @@ public class MlapiServer : BaseServer<MlapiServer, MlapiClient, MlapiConn>
         {
             using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
             {
-                writer.TryBeginWrite(packet.Count);
-                writer.WriteBytes(packet.Array, packet.Count, packet.Offset);
+                writer.WriteBytesSafe(packet.Array, packet.Count, packet.Offset);
 
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToClient",
                     destination.clientId, writer, NetworkDelivery.Reliable);
@@ -73,8 +72,7 @@ public class MlapiServer : BaseServer<MlapiServer, MlapiClient, MlapiConn>
         {
             using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
             {
-                writer.TryBeginWrite(packet.Count);
-                writer.WriteBytes(packet.Array, packet.Count, packet.Offset);
+                writer.WriteBytesSafe(packet.Array, packet.Count, packet.Offset);
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToClient",
                     destination.clientId, writer, NetworkDelivery.Unreliable);
             }

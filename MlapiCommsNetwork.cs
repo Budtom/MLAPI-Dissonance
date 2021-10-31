@@ -40,11 +40,11 @@ public class MlapiCommsNetwork
         {
             // Check if the MLAPI is ready
             var networkActive = NetworkManager.Singleton.isActiveAndEnabled &&
-                (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsHost);
+                (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer);
             if (networkActive)
             {
                 // Check what mode the MLAPI is in
-                var server = NetworkManager.Singleton.IsHost;
+                var server = NetworkManager.Singleton.IsServer;
                 var client = NetworkManager.Singleton.IsClient;
 
                 // Check what mode Dissonance is in and if
