@@ -21,7 +21,7 @@ public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
 
     protected void OnDissonanceToClient(ulong id, FastBufferReader reader)
     {
-        int length = reader.Length;
+        reader.ReadValueSafe(out int length);
         Byte[] buffer = new Byte[length];
         reader.ReadBytesSafe(ref buffer, length);
 
@@ -42,8 +42,9 @@ public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
         }
         else
         {
-            using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
+            using (FastBufferWriter writer = new FastBufferWriter(packet.Count + 4, Allocator.TempJob))
             {
+                writer.WriteValueSafe(packet.Count);
                 writer.WriteBytesSafe(packet.Array, packet.Count, packet.Offset);
 
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToServer",
@@ -61,8 +62,9 @@ public class MlapiClient : BaseClient<MlapiServer, MlapiClient, MlapiConn>
         }
         else
         {
-            using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
+            using (FastBufferWriter writer = new FastBufferWriter(packet.Count + 4, Allocator.TempJob))
             {
+                writer.WriteValueSafe(packet.Count);
                 writer.WriteBytesSafe(packet.Array, packet.Count, packet.Offset);
 
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToServer", 

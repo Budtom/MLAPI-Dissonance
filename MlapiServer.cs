@@ -25,8 +25,9 @@ public class MlapiServer : BaseServer<MlapiServer, MlapiClient, MlapiConn>
         //JP : I think there would be a way to access the raw buffer from the reader and just send that to the array segment. Maybe with unsafe c#
         //Would skip the allocation below.
         //Alternativly, we could just preallocate a big buffer and reuse it for each message?
-        Byte[] buffer = new Byte[reader.Length];
-        reader.ReadBytesSafe(ref buffer, reader.Length);
+        reader.ReadValueSafe(out int length);
+        Byte[] buffer = new Byte[length];
+        reader.ReadBytesSafe(ref buffer, length);
 
         base.NetworkReceivedPacket(client, new ArraySegment<byte>(buffer));
     }
@@ -50,8 +51,9 @@ public class MlapiServer : BaseServer<MlapiServer, MlapiClient, MlapiConn>
         }
         else
         {
-            using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
+            using (FastBufferWriter writer = new FastBufferWriter(packet.Count + 4, Allocator.TempJob))
             {
+                writer.WriteValueSafe(packet.Count);
                 writer.WriteBytesSafe(packet.Array, packet.Count, packet.Offset);
 
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToClient",
@@ -70,8 +72,9 @@ public class MlapiServer : BaseServer<MlapiServer, MlapiClient, MlapiConn>
         }
         else
         {
-            using (FastBufferWriter writer = new FastBufferWriter(packet.Count, Allocator.TempJob))
+            using (FastBufferWriter writer = new FastBufferWriter(packet.Count + 4, Allocator.TempJob))
             {
+                writer.WriteValueSafe(packet.Count);
                 writer.WriteBytesSafe(packet.Array, packet.Count, packet.Offset);
                 NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage("DissonanceToClient",
                     destination.clientId, writer, NetworkDelivery.Unreliable);
