@@ -4,7 +4,7 @@ using UnityEditor;
 #if UNITY_EDITOR
 
     [CustomEditor(typeof(MlapiCommsNetwork))]
-    public class UNetCommsNetworkEditor
+    public class MlapiCommsNetworkEditor
         : Dissonance.Editor.BaseDissonnanceCommsNetworkEditor<
             MlapiCommsNetwork,
             MlapiServer,

@@ -1,7 +1,7 @@
 ﻿using Dissonance;
 using Dissonance.Networking;
 using JetBrains.Annotations;
-using MLAPI;
+using Unity.Netcode;
 
 public class MlapiCommsNetwork
   : BaseCommsNetwork<
@@ -39,13 +39,13 @@ public class MlapiCommsNetwork
         if (IsInitialized)
         {
             // Check if the MLAPI is ready
-            var networkActive = NetworkingManager.Singleton.isActiveAndEnabled &&
-                (NetworkingManager.Singleton.IsClient || NetworkingManager.Singleton.IsHost);
+            var networkActive = NetworkManager.Singleton.isActiveAndEnabled &&
+                (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer);
             if (networkActive)
             {
                 // Check what mode the MLAPI is in
-                var server = NetworkingManager.Singleton.IsHost;
-                var client = NetworkingManager.Singleton.IsClient;
+                var server = NetworkManager.Singleton.IsServer;
+                var client = NetworkManager.Singleton.IsClient;
 
                 // Check what mode Dissonance is in and if
                 // they're different then call the correct method
